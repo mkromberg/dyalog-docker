@@ -5,7 +5,7 @@ pname=`basename $0`
 if [ $# != 1 ]; then echo "Usage: $pname directory" >& 2 ; exit 128 ; fi
 if [ ! -d $1 ]; then echo "$pname: \"$1\" does not exist" >&2 ; exit 1; fi
 
-( sleep 3 ; firefox http://localhost:4502 2>/dev/null ) &
+( sleep 3 ; firefox http://localhost:8080 2>/dev/null ) &
 
 docker run -p 4502:4502 -p 8080:8080 -it -v `readlink -e $1`:/app dyalog/miserver:dbg
 e=$?
