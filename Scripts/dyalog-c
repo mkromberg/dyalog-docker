@@ -5,8 +5,8 @@ pname=`basename $0`
 if [ $# != 1 ]; then echo "Usage: $pname directory" >& 2 ; exit 128 ; fi
 if [ ! -d $1 ]; then echo "$pname: \"$1\" does not exist" >&2 ; exit 1; fi
 
-docker run -p 4502:4502 -it -v `readlink -e $1`:/app dyalog/dyalog:17.1-dbg 2> /dev/null
-if [ $? != 0 ] ; then echo "$pname: failed to run docker" ; exit 1; fi
+( sleep 3 ; firefox http://localhost:4502 2>/dev/null ) &
 
-firefox http://localhost:4502 2> /dev/null
-if [ $? != 0 ] ; then echo "$pname: failed to start browser" ; exit 1; fi
+docker run -p 4502:4502 -it -v `readlink -e $1`:/app dyalog/dyalog:17.1-dbg
+e=$?
+if [ $e != 0 ] ; then echo "$pname: docker returned error code $e" ; exit 1; fi
