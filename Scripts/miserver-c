@@ -2,11 +2,16 @@
 
 pname=`basename $0`
 
-if [ $# != 1 ]; then echo "Usage: $pname directory" >& 2 ; exit 128 ; fi
+if [ $# = 0 ]; then echo "Usage: $pname directory" >& 2 ; exit 128 ; fi
 if [ ! -d $1 ]; then echo "$pname: \"$1\" does not exist" >&2 ; exit 1; fi
 
-( sleep 3 ; firefox http://localhost:8080 2>/dev/null ) &
+folder=`readlink -e $1`
+httpport="-p ${2:-8080}:${2:-8080}"
+if [ -z $3 ] ; then rideport="" ; else rideport="-p $3:$3 "; fi
 
-docker run -p 4502:4502 -p 8080:8080 -it -v `readlink -e $1`:/app dyalog/miserver:dbg
+( sleep 3 ; firefox http://localhost:$httpport 2>/dev/null ) &
+
+docker run $rideport -p $httpport:$httpport -it -v $folder:/app dyalog/miserver:dbg
+
 e=$?
 if [ $e != 0 ] ; then echo "$pname: docker returned error code $e" ; exit 1; fi
