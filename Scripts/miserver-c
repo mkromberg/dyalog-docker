@@ -2,7 +2,7 @@
 
 pname=`basename $0`
 
-if [ $# = 0 ]; then echo "Usage: $pname directory" >& 2 ; exit 128 ; fi
+if [ $# = 0 ]; then echo "Usage: $pname directory  [httpport] [rideport]" >& 2 ; exit 128 ; fi
 if [ ! -d $1 ]; then echo "$pname: \"$1\" does not exist" >&2 ; exit 1; fi
 
 folder=`readlink -e $1`
