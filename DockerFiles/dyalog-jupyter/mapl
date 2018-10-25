@@ -1,0 +1,153 @@
+#!/bin/sh
+
+if [ "$(uname)" = Linux ]; then
+	THIS="$(readlink -f $0)"	# mapl script location, canonical.
+else
+	THIS="$0"			# mapl script location.
+fi
+export DYALOG=$(cd $(dirname $THIS) && pwd)	# Dyalog installation directory.
+
+if ! [ "${ENABLE_CEF}" = "0" ]; then
+    if [ "$(uname)" = Linux ]; then
+        export LD_PRELOAD=$DYALOG/lib/libcef.so
+    fi
+fi
+
+extwspath()
+ 	{
+ 	WSP="$WSP:$1"
+ 	}
+
+WSP='.'
+extwspath $DYALOG/ws
+extwspath $DYALOG/xflib
+extwspath $DYALOG/Samples/OO4APL
+
+# Load config from users directory
+
+MYCONFIGDIR=$HOME/.dyalog
+export DYALOG_SHORTVERSION=171U64
+
+if [ -s $MYCONFIGDIR/dyalog.config ]; then
+ 	. $MYCONFIGDIR/dyalog.config
+else
+ 	# Copy example config
+ 	if ! [ -d $MYCONFIGDIR ]; then
+ 		mkdir -p $MYCONFIGDIR
+ 	fi
+ 	cp $DYALOG/dyalog.config.example $MYCONFIGDIR/dyalog.config
+fi
+
+export SALTSETTINGSFILE=$MYCONFIGDIR/SALT.${DYALOG_SHORTVERSION}.settings
+if [ ! -f $SALTSETTINGSFILE ]
+then
+	cat >$SALTSETTINGSFILE <<!!SALTSettings
+CommandFolder [SALT]/spice:[HOME]/MyUCMDs
+SourceFolder .:$DYALOG/Library/Core:$DYALOG/Library/Conga:$DYALOG/SALT
+!!SALTSettings
+fi
+
+if [ "xdumb" = "x$TERM" ]; then
+ 	export TERM=xterm
+else
+ 	export TERM=${TERM-xterm}
+fi
+export WSPATH=${WSPATH-$WSP}
+export APL_TEXTINAPLCORE=${APL_TEXTINAPLCORE-1}
+export TRACE_ON_ERROR=${TRACE_ON_ERROR-1}
+
+RUNAPLKEYS=true
+while [ $# != 0 ]			# Process command line.
+do
+ 	case $1 in
+ 	-tty)				# default, just ignore it
+ 		;;
+ 	-r|-ride)			# Ride
+ 		export RIDE_INIT=serve::4502
+ 		;;
+ 	-rt|-runtime)			# Runtime Only
+ 		RUNTIME=True
+ 		;;
+ 	-bg|--background)
+ 		RUNTIME=Background
+ 		;;
+ 	-kbd|--keyboard)
+ 		RUNAPLKEYS=true
+ 		;;
+ 	-nokbd|--no-keyboard)
+ 		RUNAPLKEYS=false
+ 		;;
+ 	-*)
+ 		OPTS="$OPTS $1"	# Calling option.
+ 		;;
+ 	 *)
+ 		OPTS="$OPTS $1"	# Calling argument.
+ 		;;
+ 	esac
+ 	shift				# Next parameter.
+done
+
+# Initialise APL Keyboard if no APL keyboard is set.
+$RUNAPLKEYS && $DYALOG/aplkeys.sh
+
+export SESSION_FILE="${SESSION_FILE-$DYALOG/default.dse}"
+
+
+case $RUNTIME in
+True)
+ 	$DYALOG/dyalog.rt $OPTS 0<&- 1>&- 2>&- &
+ 	;;
+Background)
+ 	export LOG_FILE_IN_USE=${LOG_FILE_IN_USE-1}
+ 	export LOG_FILE=${LOG_FILE-$MYCONFIGDIR/default.dlf}
+ 	export LOG_SIZE=${LOG_SIZE-16}
+
+ 	for APLFONTNAME in $APLT1 $APLT $TERM
+ 	do
+ 		APLFONT=$DYALOG/fonts/$APLFONTNAME
+ 		if test -f $APLFONT
+ 		then
+ 			cat $APLFONT
+ 			break
+ 		fi
+ 	done
+ 	IAM=$(whoami)
+ 	if [ "$IAM" = "root" ]; then
+ 		MYLOGDIR="/var/log/dyalog/session_logs"
+ 	else
+ 		MYLOGDIR="$MYCONFIGDIR/session_logs"
+ 	fi
+ 	if ! [ -d $MYLOGDIR ]; then
+ 		mkdir -p $MYLOGDIR
+ 		chmod 777 $MYLOGDIR
+ 	fi
+ 	MYLOG="$MYLOGDIR/dyalog.out_$(date +'%y%m%d_%H%M%S')"
+ 	$DYALOG/dyalog $OPTS 0<&- >$MYLOG 2>&1 &
+ 	;;
+*)
+ 	# log file configuration
+
+ 	export LOG_FILE_IN_USE=${LOG_FILE_IN_USE-1}
+ 	export LOG_FILE=${LOG_FILE-$MYCONFIGDIR/default.dlf}
+ 	export LOG_SIZE=${LOG_SIZE-800}
+
+ 	# download font ?
+
+ 	for APLFONTNAME in $APLT1 $APLT $TERM
+ 	do
+ 		APLFONT=$DYALOG/fonts/$APLFONTNAME
+ 		if test -f $APLFONT
+ 		then
+ 			cat $APLFONT
+ 			break
+ 		fi
+ 	done
+
+ 	# AUTO_PW on by default
+
+ 	export AUTO_PW=${AUTO_PW-1}
+
+
+ 	$DYALOG/dyalog $OPTS
+ 	;;
+esac
