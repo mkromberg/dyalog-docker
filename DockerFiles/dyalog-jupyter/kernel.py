@@ -299,9 +299,6 @@ class DyalogKernel(Kernel):
                 msg_len = a*0x1000000 + b*0x10000 + c*0x100 + d - 8
                 if head[4:8] == b'RIDE':
                     rideMessage = self.recv_all(msg_len)
-                    writeln(rideMessage)
-                    writeln(str(rideMessage))
-                    writeln(type(rideMessage.decode("utf-8")))
                     try:
                         rideMessage = rideMessage.decode("utf-8")
                     except:
@@ -317,7 +314,6 @@ class DyalogKernel(Kernel):
                         json_data = []
                         json_data.append(rideMessage)
                         json_data.append("String")
-                    #writeln(type(rideMessage))
                     writeln("RECV " + rideMessage)
                     dq.appendleft(json_data)
                 else:

@@ -6,6 +6,10 @@ ENV LANG en_GB.UTF-8
 ENV LANGUAGE en_GB:en
 ENV LC_ALL en_GB.UTF-8
 
+RUN apt-get install -y epiphany-browser
+
+RUN adduser dyalog && echo      
+
 RUN apt-get install -y git jupyter-notebook && \
     apt-get clean && rm -Rf /var/lib/apt/lists/*
 
