@@ -2,7 +2,8 @@
 if [[ $# -eq 0 ]]; 
 then
     # Default: Open tree
-    docker run -it --user dyalog -e DISPLAY=$DISPLAY -p 8888:8888 -v /tmp/.X11-unix:/tmp/.X11-unix dyalog/jupyter
+    docker run -it --user dyalog --net=host -e DISPLAY=unix$DISPLAY -p 8888:8888 -v /tmp/.X11-unix:/tmp/.X11-unix dyalog/jupyter
+    exit 0
 fi
 filepath=`readlink -f "$@"`
 echo "$filepath"
@@ -13,4 +14,4 @@ then
 else
     folder=$filepath;
 fi
-docker run -it --user dyalog -e DISPLAY=$DISPLAY -e NOTEBOOK="$filename" -p 8888:8888 -v /tmp/.X11-unix:/tmp/.X11-unix -v $folder:/app dyalog/jupyter
+docker run -it --user dyalog --net=host -e DISPLAY=$DISPLAY -e NOTEBOOK="$filename" -p 8888:8888 -v /tmp/.X11-unix:/tmp/.X11-unix -v $folder:/app dyalog/jupyter
